@@ -6,13 +6,8 @@ import { validateThreadForm } from '../utils/formValidation';
 
 function ThreadForm({ initialValues = null }) {
   const navigate = useNavigate();
-  const {
-    createThread,
-    updateThread,
-    // authorName,
-    // setAuthorName,
-    resetAuthorName,
-  } = useContext(ThreadContext);
+  const { createThread, updateThread, resetAuthorName } =
+    useContext(ThreadContext);
 
   const [title, setTitle] = useState(initialValues ? initialValues.title : '');
   const [author, setAuthor] = useState('');
@@ -24,25 +19,6 @@ function ThreadForm({ initialValues = null }) {
   );
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // useEffect(() => {
-  //   if (initialValues) {
-  //     setAuthor(initialValues.author);
-  //   } else if (authorName) {
-  //     setAuthor(authorName);
-  //   } else {
-  //     const savedAuthor = localStorage.getItem('forumAuthorName');
-  //     if (savedAuthor) {
-  //       setAuthor(savedAuthor);
-  //     }
-  //   }
-  // }, [initialValues, authorName]);
-
-  // useEffect(() => {
-  //   if (author && author !== authorName) {
-  //     setAuthorName(author);
-  //   }
-  // }, [author, setAuthorName, authorName]);
 
   const validateForm = () => {
     const newErrors = validateThreadForm(title, content, author);

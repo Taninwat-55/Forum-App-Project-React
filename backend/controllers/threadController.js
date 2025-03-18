@@ -1,182 +1,116 @@
-// const db = require('../database');
+const db = require('../database');
 
-// // Get all threads
-// const getAllThreads = (req, res) => {
-//   try {
-//     const { sort, category, search } = req.query;
+const threadController = {
+  getAllThreads: (req, res) => {
+    try {
+      const threads = db
+        .prepare('SELECT * FROM threads ORDER BY updated_at DESC')
+        .all();
+      res.json(threads);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
 
-//     let query = `
-//       SELECT t.*, COUNT(r.id) as reply_count,
-//       MAX(r.created_at) as latest_reply
-//       FROM threads t
-//       LEFT JOIN replies r ON t.id = r.thread_id
-//     `;
+  getThreadById: (req, res) => {
+    try {
+      const { id } = req.params;
+      const thread = db.prepare('SELECT * FROM threads WHERE id = ?').get(id);
 
-//     const whereConditions = [];
-//     const queryParams = [];
+      if (!thread) {
+        return res.status(404).json({ error: 'Thread not found' });
+      }
 
-//     // Add category filter if provided
-//     if (category) {
-//       whereConditions.push('t.category = ?');
-//       queryParams.push(category);
-//     }
+      const replies = db
+        .prepare(
+          'SELECT * FROM replies WHERE thread_id = ? ORDER BY created_at'
+        )
+        .all(id);
 
-//     // Add search filter if provided
-//     if (search) {
-//       whereConditions.push('(t.title LIKE ? OR t.content LIKE ?)');
-//       queryParams.push(`%${search}%`, `%${search}%`);
-//     }
+      res.json({ thread, replies });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
 
-//     // Add WHERE clause if we have conditions
-//     if (whereConditions.length > 0) {
-//       query += ' WHERE ' + whereConditions.join(' AND ');
-//     }
+  createThread: (req, res) => {
+    try {
+      const { title, content, category, author } = req.body;
 
-//     query += ' GROUP BY t.id';
+      if (!title || !content || !author) {
+        return res
+          .status(400)
+          .json({ error: 'Title, content and author are required' });
+      }
 
-//     // Add sorting
-//     if (sort === 'replies') {
-//       query += ' ORDER BY reply_count DESC';
-//     } else {
-//       // Default to latest activity
-//       query += ' ORDER BY COALESCE(latest_reply, t.created_at) DESC';
-//     }
+      const result = db
+        .prepare(
+          'INSERT INTO threads (title, content, category, author) VALUES (?, ?, ?, ?)'
+        )
+        .run(title, content, category || 'General', author);
 
-//     const threads = db.prepare(query).all(...queryParams);
+      const newThread = db
+        .prepare('SELECT * FROM threads WHERE id = ?')
+        .get(result.lastInsertRowid);
 
-//     res.json(threads);
-//   } catch (error) {
-//     console.error('Error getting threads:', error);
-//     res.status(500).json({ error: 'Failed to retrieve threads' });
-//   }
-// };
+      res.status(201).json(newThread);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
 
-// // Get a single thread by ID
-// const getThreadById = (req, res) => {
-//   try {
-//     const { id } = req.params;
+  updateThread: (req, res) => {
+    try {
+      const { id } = req.params;
+      const { title, content, category, author } = req.body;
 
-//     // Get thread details
-//     const thread = db.prepare('SELECT * FROM threads WHERE id = ?').get(id);
+      if (!title || !content || !author) {
+        return res
+          .status(400)
+          .json({ error: 'Title, content and author are required' });
+      }
 
-//     if (!thread) {
-//       return res.status(404).json({ error: 'Thread not found' });
-//     }
+      const thread = db.prepare('SELECT * FROM threads WHERE id = ?').get(id);
+      if (!thread) {
+        return res.status(404).json({ error: 'Thread not found' });
+      }
 
-//     // Get replies for this thread
-//     const replies = db
-//       .prepare('SELECT * FROM replies WHERE thread_id = ? ORDER BY created_at')
-//       .all(id);
+      db.prepare(
+        'UPDATE threads SET title = ?, content = ?, author = ?, category = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?'
+      ).run(
+        title,
+        content,
+        author || thread.author,
+        category || thread.category,
+        id
+      );
 
-//     // Include replies with thread
-//     thread.replies = replies;
+      const updatedThread = db
+        .prepare('SELECT * FROM threads WHERE id = ?')
+        .get(id);
 
-//     res.json(thread);
-//   } catch (error) {
-//     console.error('Error getting thread:', error);
-//     res.status(500).json({ error: 'Failed to retrieve thread' });
-//   }
-// };
+      res.json(updatedThread);
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
 
-// // Create a new thread
-// const createThread = (req, res) => {
-//   try {
-//     const { title, content, category } = req.body;
+  deleteThread: (req, res) => {
+    try {
+      const { id } = req.params;
 
-//     // Validate input
-//     if (!title || !content || !category) {
-//       return res
-//         .status(400)
-//         .json({ error: 'Title, content, and category are required' });
-//     }
+      const thread = db.prepare('SELECT * FROM threads WHERE id = ?').get(id);
+      if (!thread) {
+        return res.status(404).json({ error: 'Thread not found' });
+      }
 
-//     // Insert the new thread
-//     const result = db
-//       .prepare(
-//         'INSERT INTO threads (title, content, category) VALUES (?, ?, ?)'
-//       )
-//       .run(title, content, category);
+      db.prepare('DELETE FROM threads WHERE id = ?').run(id);
 
-//     // Get the created thread
-//     const thread = db
-//       .prepare('SELECT * FROM threads WHERE id = ?')
-//       .get(result.lastInsertRowid);
+      res.json({ message: 'Thread deleted successfully' });
+    } catch (error) {
+      res.status(500).json({ error: error.message });
+    }
+  },
+};
 
-//     res.status(201).json(thread);
-//   } catch (error) {
-//     console.error('Error creating thread:', error);
-//     res.status(500).json({ error: 'Failed to create thread' });
-//   }
-// };
-
-// // Update a thread
-// const updateThread = (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { title, content, category } = req.body;
-
-//     // Validate input
-//     if (!title && !content && !category) {
-//       return res
-//         .status(400)
-//         .json({ error: 'At least one field must be provided' });
-//     }
-
-//     // Check if thread exists
-//     const thread = db.prepare('SELECT * FROM threads WHERE id = ?').get(id);
-//     if (!thread) {
-//       return res.status(404).json({ error: 'Thread not found' });
-//     }
-
-//     // Update thread
-//     db.prepare(
-//       `
-//       UPDATE threads 
-//       SET title = COALESCE(?, title), 
-//           content = COALESCE(?, content), 
-//           category = COALESCE(?, category),
-//           updated_at = CURRENT_TIMESTAMP
-//       WHERE id = ?
-//     `
-//     ).run(title || null, content || null, category || null, id);
-
-//     // Get updated thread
-//     const updatedThread = db
-//       .prepare('SELECT * FROM threads WHERE id = ?')
-//       .get(id);
-
-//     res.json(updatedThread);
-//   } catch (error) {
-//     console.error('Error updating thread:', error);
-//     res.status(500).json({ error: 'Failed to update thread' });
-//   }
-// };
-
-// // Delete a thread
-// const deleteThread = (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     // Check if thread exists
-//     const thread = db.prepare('SELECT * FROM threads WHERE id = ?').get(id);
-//     if (!thread) {
-//       return res.status(404).json({ error: 'Thread not found' });
-//     }
-
-//     // Delete thread (cascade will delete replies due to foreign key constraint)
-//     db.prepare('DELETE FROM threads WHERE id = ?').run(id);
-
-//     res.json({ message: 'Thread deleted successfully' });
-//   } catch (error) {
-//     console.error('Error deleting thread:', error);
-//     res.status(500).json({ error: 'Failed to delete thread' });
-//   }
-// };
-
-// module.exports = {
-//   getAllThreads,
-//   getThreadById,
-//   createThread,
-//   updateThread,
-//   deleteThread,
-// };
+module.exports = threadController;
