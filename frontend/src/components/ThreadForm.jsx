@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ThreadContext } from '../context/ThreadContext2';
 import { THREAD_CATEGORIES } from '../constants';
@@ -9,8 +9,8 @@ function ThreadForm({ initialValues = null }) {
   const {
     createThread,
     updateThread,
-    authorName,
-    setAuthorName,
+    // authorName,
+    // setAuthorName,
     resetAuthorName,
   } = useContext(ThreadContext);
 
@@ -25,24 +25,24 @@ function ThreadForm({ initialValues = null }) {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    if (initialValues) {
-      setAuthor(initialValues.author);
-    } else if (authorName) {
-      setAuthor(authorName);
-    } else {
-      const savedAuthor = localStorage.getItem('forumAuthorName');
-      if (savedAuthor) {
-        setAuthor(savedAuthor);
-      }
-    }
-  }, [initialValues, authorName]);
+  // useEffect(() => {
+  //   if (initialValues) {
+  //     setAuthor(initialValues.author);
+  //   } else if (authorName) {
+  //     setAuthor(authorName);
+  //   } else {
+  //     const savedAuthor = localStorage.getItem('forumAuthorName');
+  //     if (savedAuthor) {
+  //       setAuthor(savedAuthor);
+  //     }
+  //   }
+  // }, [initialValues, authorName]);
 
-  useEffect(() => {
-    if (author && author !== authorName) {
-      setAuthorName(author);
-    }
-  }, [author, setAuthorName, authorName]);
+  // useEffect(() => {
+  //   if (author && author !== authorName) {
+  //     setAuthorName(author);
+  //   }
+  // }, [author, setAuthorName, authorName]);
 
   const validateForm = () => {
     const newErrors = validateThreadForm(title, content, author);
