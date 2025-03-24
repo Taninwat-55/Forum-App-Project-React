@@ -14,7 +14,7 @@ function ReplyForm({ threadId, onReplyAdded }) {
     }
   }, []);
 
-  // When author changes
+  // When author changes 
   useEffect(() => {
     if (author) {
       localStorage.setItem('forumAuthorName', author);
