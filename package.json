@@ -4,7 +4,7 @@
   "description": "A simple forum application",
   "main": "index.js",
   "scripts": {
-    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
     "server": "cd backend && npm run dev",
     "client": "cd frontend && npm run dev",
     "install-deps": "npm install && cd backend && npm install && cd ../frontend && npm install"

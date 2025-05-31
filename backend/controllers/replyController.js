@@ -1,4 +1,3 @@
-// File: controllers/replyController.js
 const db = require('../database');
 
 const replyController = {
