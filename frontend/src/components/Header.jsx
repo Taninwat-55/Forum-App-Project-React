@@ -2,16 +2,18 @@ import { Link } from 'react-router-dom';
 
 function Header() {
   return (
-    <header className="header">
-      <div className="container">
-        <h1>Forum App</h1>
+    <header className='header'>
+      <div className='container'>
+        <Link to='/'>
+          <h1>Forum App</h1>
+        </Link>
         <nav>
           <ul>
             <li>
-              <Link to="/">Home</Link>
+              <Link to='/'>Home</Link>
             </li>
             <li>
-              <Link to="/new-thread">New Thread</Link>
+              <Link to='/new-thread'>New Thread</Link>
             </li>
           </ul>
         </nav>
