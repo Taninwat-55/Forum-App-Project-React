@@ -4,9 +4,9 @@ function Header() {
   return (
     <header className='header'>
       <div className='container'>
-        <Link to='/'>
+        <a href='/'>
           <h1>Forum App</h1>
-        </Link>
+        </a>
         <nav>
           <ul>
             <li>
